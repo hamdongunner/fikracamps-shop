@@ -13,6 +13,9 @@ import PhoneFormat from "../../helpers/phone.helper";
 import * as jwt from "jsonwebtoken";
 import config from "../../config";
 import { async } from "validate.js";
+import { Product } from "../../src/entity/Product";
+import { Invoice } from "../../src/entity/Invoice";
+import { InvoiceItem } from "../../src/entity/InvoiceItem";
 
 /**
  *
@@ -53,7 +56,7 @@ export default class UserController {
       complete: false,
       otp: getOTP(),
       password,
-      phone
+      phone,
     });
     await user.save();
     user.password = null;
@@ -131,5 +134,70 @@ export default class UserController {
     // return
 
     return okRes(res, { data: { token } });
+  }
+
+  /**
+   *
+   * @param req
+   * @param res
+   */
+  static async makeInvoice(req, res): Promise<object> {
+    // validation
+    let notValid = validate(req.body, validation.makeInvoice());
+    if (notValid) return errRes(res, notValid);
+
+    let ids = [];
+    for (const iterator of req.body.products) {
+      let notValid = validate(iterator, validation.oneProduct());
+      if (notValid) return errRes(res, notValid);
+      ids.push(iterator.id);
+    }
+
+    // get the user let user = req.user
+    let user = req.user;
+
+    // get the products from DB
+    let products = await Product.findByIds(ids);
+
+    [
+      { id: 1, quantity: 2 },
+      { id: 2, quantity: 1 },
+    ];
+    let total = 0;
+    //  calculate the total from the products
+    for (const product of products) {
+      total =
+        total +
+        product.price *
+          req.body.products.filter((e) => e.id == product.id)[0].quantity;
+    }
+
+    // create the invoice & save
+    let invoice: any;
+    invoice = await Invoice.create({
+      ...req.body,
+      total,
+      status: "pending",
+      user,
+    });
+    await invoice.save();
+
+    // create ZC things
+
+    // create the invoice items
+    for (const product of products) {
+      let invoiceItem = await InvoiceItem.create({
+        quantity: req.body.products.filter((e) => e.id == product.id)[0]
+          .quantity,
+        invoice,
+        subtotal:
+          req.body.products.filter((e) => e.id == product.id)[0].quantity *
+          product.price,
+        product,
+      });
+      await invoiceItem.save();
+    }
+
+    return okRes(res, { data: { invoice } });
   }
 }

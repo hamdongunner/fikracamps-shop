@@ -68,6 +68,8 @@ export default class HomeController {
   static async getInvoices(req, res): Promise<object> {
     try {
       let data = await Invoice.find({
+        where: { user: req.user },
+
         join: {
           alias: "invoice",
           leftJoinAndSelect: {
