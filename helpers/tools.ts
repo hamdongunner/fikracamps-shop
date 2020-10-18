@@ -1,3 +1,5 @@
+import * as bcrypt from "bcrypt";
+
 /**
  *
  * @param res
@@ -24,4 +26,21 @@ const okRes = (res, data, statusCode = 200) => {
 
 const getOTP = () => Math.floor(1000 + Math.random() * 9000);
 
-export { errRes, okRes, getOTP };
+/**
+ *
+ * @param {*} plainPassword
+ */
+const hashMyPassword = async (plainPassword) => {
+  const salt = await bcrypt.genSalt(10);
+  const password = await bcrypt.hash(plainPassword, salt);
+  return password;
+};
+
+/**
+ *
+ * @param {*} plainPassword
+ */
+const comparePassword = async (plainPassword, hash) =>
+  await bcrypt.compare(plainPassword, hash);
+
+export { errRes, okRes, getOTP, hashMyPassword, comparePassword };

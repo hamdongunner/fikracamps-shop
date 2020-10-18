@@ -22,7 +22,7 @@ export class User extends BaseEntity {
   @Column()
   password: string;
 
-  @Column()
+  @Column({ nullable: true })
   otp: number;
 
   @Column()
