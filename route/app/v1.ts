@@ -13,5 +13,6 @@ router.post("/login", UserController.login);
 router.get("/categories", HomeController.getCategories);
 router.get("/products/:category", HomeController.getProducts);
 router.get("/methods", HomeController.getMethods);
+router.get("/invoices", HomeController.getInvoices);
 
 export default router;
