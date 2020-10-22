@@ -20,7 +20,8 @@
       "pg": "^8.4.1",
       "reflect-metadata": "^0.1.13",
       "typeorm": "0.2.28",
-      "validate.js": "^0.13.1"
+      "validate.js": "^0.13.1",
+      "zaincash": "^1.0.5"
    },
    "scripts": {
       "start": "ts-node src/index.ts"

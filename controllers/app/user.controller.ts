@@ -12,10 +12,10 @@ import { User } from "../../src/entity/User";
 import PhoneFormat from "../../helpers/phone.helper";
 import * as jwt from "jsonwebtoken";
 import config from "../../config";
-import { async } from "validate.js";
 import { Product } from "../../src/entity/Product";
 import { Invoice } from "../../src/entity/Invoice";
 import { InvoiceItem } from "../../src/entity/InvoiceItem";
+import * as ZC from "zaincash";
 
 /**
  *
@@ -180,6 +180,31 @@ export default class UserController {
 
     // create ZC things
 
+    const paymentData = {
+      amount: total,
+      orderId: invoice.id,
+      serviceType: "FikraCamps Shop",
+      redirectUrl: "http://localhost:3000/v1/zc/redirect",
+      production: false,
+      msisdn: config.zcMsisdn,
+      merchantId: config.zcMerchant,
+      secret: config.zcSecret,
+      lang: "ar",
+    };
+
+    let zc = new ZC(paymentData);
+
+    let zcTransactionId: any;
+    try {
+      zcTransactionId = await zc.init();
+    } catch (error) {
+      return errRes(res, error);
+    }
+
+    let url = `https://test.zaincash.iq/transaction/pay?id=${zcTransactionId}`;
+    invoice.zcTransactionId = zcTransactionId;
+    await invoice.save();
+
     // create the invoice items
     for (const product of products) {
       let invoiceItem = await InvoiceItem.create({
@@ -194,7 +219,7 @@ export default class UserController {
       await invoiceItem.save();
     }
 
-    return okRes(res, { data: { invoice } });
+    return okRes(res, { data: { invoice, url } });
   }
 
   /**
@@ -275,5 +300,40 @@ export default class UserController {
     await user.save();
 
     return okRes(res, { data: { msg: "All good " } });
+  }
+
+  /**
+   *
+   * @param req
+   * @param res
+   */
+  static async zcRedirect(req, res): Promise<object> {
+    const token = req.query.token;
+
+    let payload: any;
+    try {
+      payload = jwt.verify(token, config.zcSecret);
+    } catch (error) {
+      return errRes(res, error);
+    }
+    const id = payload.orderid;
+
+    let invoice = await Invoice.findOne(id);
+
+    if (!invoice) return errRes(res, "No such invoice");
+
+    if (payload.status == "success") {
+      invoice.status = "paid";
+      invoice.zcOperation = payload.operationid;
+      invoice.zcMsisdn = payload.msisdn;
+      await invoice.save();
+      return okRes(res, { invoice });
+    }
+    invoice.status = payload.status;
+    invoice.zcOperation = payload.operationid;
+    invoice.zcMsg = payload.msg;
+    await invoice.save();
+
+    return errRes(res, { data: { invoice } });
   }
 }
