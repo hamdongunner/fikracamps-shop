@@ -35,7 +35,7 @@ export default class UserController {
     let phone = phoneObj.globalP;
     let user: any;
     try {
-      user = await User.findOne({ where: { phone: req.body.phone } });
+      user = await User.findOne({ where: { phone } });
       if (user) {
         if (user.complete)
           return errRes(res, `Phone ${req.body.phone} already exists`);
@@ -159,10 +159,6 @@ export default class UserController {
     // get the products from DB
     let products = await Product.findByIds(ids);
 
-    [
-      { id: 1, quantity: 2 },
-      { id: 2, quantity: 1 },
-    ];
     let total = 0;
     //  calculate the total from the products
     for (const product of products) {
@@ -199,5 +195,85 @@ export default class UserController {
     }
 
     return okRes(res, { data: { invoice } });
+  }
+
+  /**
+   *
+   * @param req
+   * @param res
+   */
+  static async forgetPassword(req, res): Promise<object> {
+    // validation
+    let notValid = validate(req.body, validation.forgetPassword());
+    if (notValid) return errRes(res, notValid);
+
+    let phoneObj = PhoneFormat.getAllFormats(req.body.phone);
+    if (!phoneObj.isNumber)
+      return errRes(res, `Phone ${req.body.phone} is not a valid`);
+    let phone = phoneObj.globalP;
+
+    // get user from database where phone, complete: true, active: true -> if not err
+
+    let user: any;
+    try {
+      user = await User.findOne({
+        where: { phone, complete: true, active: true },
+      });
+
+      if (!user) return errRes(res, `Please complete the registration process`);
+    } catch (error) {
+      return errRes(res, error);
+    }
+
+    // create and save the verifyPassword
+    user.verifyPassword = getOTP();
+    await user.save();
+    // send it in SMS TODO:
+    // create the token NOT LIKE THE LOGIN TOKEN
+    const token = jwt.sign({ phone }, config.jwtSecret);
+    // return
+    return okRes(res, { data: { token } });
+  }
+
+  /**
+   *
+   * @param req
+   * @param res
+   */
+  static async verifyPassword(req, res): Promise<object> {
+    // validation
+    let notValid = validate(req.body, validation.verifyPassword());
+    if (notValid) return errRes(res, notValid);
+
+    // get the token from headers -> if not return `please send the token`
+    const token = req.headers.token;
+    if (!token) return errRes(res, `please send the token`);
+    // get payload -> phone
+    let payload: any;
+    try {
+      payload = jwt.verify(token, config.jwtSecret);
+    } catch (error) {
+      return errRes(res, error);
+    }
+    const phone = payload.phone;
+
+    // get the user from
+    let user = await User.findOne({
+      where: { phone, complete: true, active: true },
+    });
+
+    if (!user) return errRes(res, `Please complete the registration process`);
+
+    // compare the verifyPassword text -> delete from DB
+    if (user.verifyPassword != req.body.verifyPassword) {
+      user.verifyPassword = null;
+      await user.save();
+      return errRes(res, `The code ${req.body.verifyPassword} is not correct`);
+    }
+    // hash and set to the new password
+    user.password = await hashMyPassword(req.body.newPassword);
+    await user.save();
+
+    return okRes(res, { data: { msg: "All good " } });
   }
 }

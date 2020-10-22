@@ -100,4 +100,31 @@ export default class Validator {
       type: "number",
     },
   });
+
+  /**
+   *
+   * @param must: boolean
+   */
+  static forgetPassword = (must = true) => ({
+    phone: {
+      presence: must,
+      type: "string",
+    },
+  });
+
+  /**
+   *
+   * @param must: boolean
+   */
+  static verifyPassword = (must = true) => ({
+    verifyPassword: {
+      presence: must,
+      type: "string",
+    },
+    newPassword: {
+      presence: must,
+      type: "string",
+      length: { minimum: 4 },
+    },
+  });
 }
