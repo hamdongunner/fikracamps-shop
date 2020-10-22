@@ -2,8 +2,9 @@ import * as express from "express";
 import { createConnection } from "typeorm";
 import { errRes } from "../helpers/tools";
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 import v1 from "../route/app/v1";
+import { env } from "process";
 
 createConnection().then(async (connection) => {
   app.use(express.json());
