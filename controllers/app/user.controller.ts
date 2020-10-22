@@ -184,7 +184,7 @@ export default class UserController {
       amount: total,
       orderId: invoice.id,
       serviceType: "FikraCamps Shop",
-      redirectUrl: "http://localhost:3000/v1/zc/redirect",
+      redirectUrl: "https://fikracamps-shop-hamdon.herokuapp.com/v1/zc/redirect",
       production: false,
       msisdn: config.zcMsisdn,
       merchantId: config.zcMerchant,
