@@ -1,4 +1,4 @@
-import { errRes, okRes } from "../../helpers/tools";
+import { errRes, okRes, paginate } from "../../helpers/tools";
 import { Category } from "../../src/entity/Category";
 import { Invoice } from "../../src/entity/Invoice";
 import { Method } from "../../src/entity/Method";
@@ -14,10 +14,16 @@ export default class HomeController {
    * @param res
    */
   static async getCategories(req, res): Promise<object> {
+    let { p, s } = req.query;
+    let { skip, take } = paginate(p, s);
+
     try {
-      let data = await Category.find({
+      let data = await Category.findAndCount({
         where: { active: true },
         relations: ["products"],
+        take,
+        skip,
+        order: { id: "ASC" },
       });
       return okRes(res, { data });
     } catch (error) {
@@ -31,12 +37,17 @@ export default class HomeController {
    * @param res
    */
   static async getProducts(req, res): Promise<object> {
+    let { p, s } = req.query;
+    let { skip, take } = paginate(p, s);
+
     let category = req.params.category;
     const active = true;
     try {
       let data = await Product.find({
         where: { active, category },
         relations: ["category"],
+        take,
+        skip,
       });
       return okRes(res, { data });
     } catch (error) {
