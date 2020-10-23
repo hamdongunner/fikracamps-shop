@@ -1,5 +1,3 @@
-import { env } from "process";
-
 require("dotenv").config();
 
 let config: any;
