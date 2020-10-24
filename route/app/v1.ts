@@ -13,7 +13,7 @@ router.post("/invoice", userAuth, UserController.makeInvoice);
 router.post("/forget", UserController.forgetPassword);
 router.post("/verify", UserController.verifyPassword);
 router.get("/zc/redirect", UserController.zcRedirect);
-
+router.post("/upload", UserController.upload);
 // HOME CONTROLLERproducts
 router.get("/categories", HomeController.getCategories);
 router.get("/products/:category", HomeController.getProducts);

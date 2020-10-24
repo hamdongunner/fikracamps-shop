@@ -1,4 +1,8 @@
 import * as bcrypt from "bcrypt";
+const accountSid = "AC46336a3d11a0e49637857ec2dfdc5d7c";
+const authToken = "9438765f28d5b393e41cf41e70e5ca45";
+import * as twilio from "twilio";
+const client = twilio(accountSid, authToken);
 
 /**
  *
@@ -43,15 +47,29 @@ const hashMyPassword = async (plainPassword) => {
 const comparePassword = async (plainPassword, hash) =>
   await bcrypt.compare(plainPassword, hash);
 
-  /**
-   * 
-   * @param p 
-   * @param s 
-   */
+/**
+ *
+ * @param p
+ * @param s
+ */
 const paginate = (p = 1, s = 10) => {
   let take = s;
   let skip = (p - 1) * take;
   return { take, skip };
 };
 
-export { errRes, okRes, getOTP, hashMyPassword, comparePassword, paginate };
+const sendSMS = (body: string, to: string) => {
+  client.messages
+    .create({ body, from: "+12563641871", to })
+    .then((message) => console.log(message.sid));
+};
+
+export {
+  errRes,
+  okRes,
+  getOTP,
+  hashMyPassword,
+  comparePassword,
+  paginate,
+  sendSMS,
+};

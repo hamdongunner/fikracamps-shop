@@ -4,9 +4,10 @@ import { errRes } from "../helpers/tools";
 const app = express();
 const port = process.env.PORT || 3000;
 import v1 from "../route/app/v1";
-import { env } from "process";
+import * as fileUpload from "express-fileupload";
 
 createConnection().then(async (connection) => {
+  app.use(fileUpload({}));
   app.use(express.json());
 
   app.use("/v1", v1);

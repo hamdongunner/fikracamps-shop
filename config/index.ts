@@ -6,5 +6,5 @@ export default config = {
   zcSecret: process.env.ZC_SECRET || "shhh",
   zcMsisdn: process.env.ZC_MSISDN || "",
   zcMerchant: process.env.ZC_MERCHANT || "",
-
+  imageBB: process.env.IMAGE_BB || "",
 };

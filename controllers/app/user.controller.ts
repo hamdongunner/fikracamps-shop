@@ -5,6 +5,7 @@ import {
   getOTP,
   hashMyPassword,
   comparePassword,
+  sendSMS,
 } from "../../helpers/tools";
 import * as validate from "validate.js";
 import validation from "../../helpers/validation.helper";
@@ -16,6 +17,8 @@ import { Product } from "../../src/entity/Product";
 import { Invoice } from "../../src/entity/Invoice";
 import { InvoiceItem } from "../../src/entity/InvoiceItem";
 import * as ZC from "zaincash";
+import * as imgbbUploader from "imgbb-uploader";
+import * as fs from "fs";
 
 /**
  *
@@ -60,9 +63,10 @@ export default class UserController {
     });
     await user.save();
     user.password = null;
-    user.otp = null;
-    // TODO: send the SMS
 
+    sendSMS(` Your OTP: ${user.otp}`, user.phone);
+
+    user.otp = null;
     const token = jwt.sign({ id: user.id }, config.jwtSecret);
     return okRes(res, { data: { user, token } });
   }
@@ -184,7 +188,8 @@ export default class UserController {
       amount: total,
       orderId: invoice.id,
       serviceType: "FikraCamps Shop",
-      redirectUrl: "https://fikracamps-shop-hamdon.herokuapp.com/v1/zc/redirect",
+      redirectUrl:
+        "https://fikracamps-shop-hamdon.herokuapp.com/v1/zc/redirect",
       production: false,
       msisdn: config.zcMsisdn,
       merchantId: config.zcMerchant,
@@ -335,5 +340,26 @@ export default class UserController {
     await invoice.save();
 
     return errRes(res, { data: { invoice } });
+  }
+
+  /**
+   *
+   * @param req
+   * @param res
+   */
+  static async upload(req: Request, res: Response): Promise<object> {
+    if (!req.files) return errRes(res, `Image is missing`);
+    let image = req.files.image;
+    let fileName = "image";
+    let path = `./public/${fileName}.png`;
+    image.mv(path, function (err) {
+      if (err) return { err, image: null, status: 500 };
+      imgbbUploader(config.imageBB, `./public/${fileName}.png`)
+        .then((response) => {
+          fs.unlink(path, (error) => errRes(res, error));
+          return okRes(res, response);
+        })
+        .catch((error) => console.error(1));
+    });
   }
 }
