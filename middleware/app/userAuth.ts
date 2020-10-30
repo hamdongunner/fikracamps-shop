@@ -10,7 +10,7 @@ let userAuth: any;
  */
 export default userAuth = async (req, res, next): Promise<object> => {
   const token = req.headers.token;
-  if (!token) return errRes(res, "Token is required ");
+  if (!token) return errRes(res, "Token is required ", "token");
 
   let payload: any;
   try {

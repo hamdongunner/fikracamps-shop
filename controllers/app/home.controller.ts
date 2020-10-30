@@ -1,4 +1,4 @@
-import { Like } from "typeorm";
+import { Like, Raw } from "typeorm";
 import { errRes, okRes, paginate } from "../../helpers/tools";
 import { Category } from "../../src/entity/Category";
 import { Invoice } from "../../src/entity/Invoice";
@@ -21,7 +21,10 @@ export default class HomeController {
     let whereObj: object;
 
     if (q) {
-      whereObj = { active: true, title: Like(`%${q}%`) };
+      whereObj = {
+        active: true,
+        title: Raw((alias) => `${alias} ILIKE '%${q}%'`),
+      };
     } else whereObj = { active: true };
 
     try {

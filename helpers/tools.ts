@@ -19,6 +19,7 @@ const errRes = (res, err, key = "err", statusCode = 400) => {
   } else {
     response.err = err;
   }
+
   res.statusCode = statusCode;
   return res.json(response);
 };
