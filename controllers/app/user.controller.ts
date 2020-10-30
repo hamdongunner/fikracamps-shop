@@ -34,7 +34,7 @@ export default class UserController {
     if (notValid) return errRes(res, notValid);
     let phoneObj = PhoneFormat.getAllFormats(req.body.phone);
     if (!phoneObj.isNumber)
-      return errRes(res, `Phone ${req.body.phone} is not a valid`);
+      return errRes(res, `Phone ${req.body.phone} is not a valid`, "phone");
     let phone = phoneObj.globalP;
     let user: any;
     try {
@@ -151,17 +151,19 @@ export default class UserController {
     if (notValid) return errRes(res, notValid);
 
     let ids = [];
-    for (const iterator of req.body.products) {
-      let notValid = validate(iterator, validation.oneProduct());
+    for (const product of req.body.products) {
+      let notValid = validate(product, validation.oneProduct());
       if (notValid) return errRes(res, notValid);
-      ids.push(iterator.id);
+      ids.push(product.id);
     }
 
     // get the user let user = req.user
     let user = req.user;
 
     // get the products from DB
-    let products = await Product.findByIds(ids);
+    let products = await Product.findByIds(ids, { where: { active: true } });
+
+    [{ id: 1, quantity: 1 }];
 
     let total = 0;
     //  calculate the total from the products
@@ -190,7 +192,7 @@ export default class UserController {
       serviceType: "FikraCamps Shop",
       redirectUrl:
         "https://fikracamps-shop-hamdon.herokuapp.com/v1/zc/redirect",
-      production: false,
+      production: config.zcProduction,
       msisdn: config.zcMsisdn,
       merchantId: config.zcMerchant,
       secret: config.zcSecret,
@@ -353,11 +355,11 @@ export default class UserController {
     let fileName = "image";
     let path = `./public/${fileName}.png`;
     image.mv(path, function (err) {
-      if (err) return { err, image: null, status: 500 };
+      if (err) return errRes(res, err);
       imgbbUploader(config.imageBB, `./public/${fileName}.png`)
-        .then((response) => {
+        .then((r) => {
           fs.unlink(path, (error) => errRes(res, error));
-          return okRes(res, response);
+          return okRes(res, r);
         })
         .catch((error) => console.error(1));
     });

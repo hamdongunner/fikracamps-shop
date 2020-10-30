@@ -1,7 +1,7 @@
 /**
  *
  */
-export default class Validator {
+export default class Validator { // import X without star
   /**
    *
    * @param must: boolean

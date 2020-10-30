@@ -10,8 +10,15 @@ const client = twilio(accountSid, authToken);
  * @param err
  * @param statusCode
  */
-const errRes = (res, err, statusCode = 400) => {
-  let response = { status: false, err };
+const errRes = (res, err, key = "err", statusCode = 400) => {
+  let response = { status: false, err: null };
+  if (typeof err === "string") {
+    let obj = {};
+    obj[key] = [err];
+    response.err = obj;
+  } else {
+    response.err = err;
+  }
   res.statusCode = statusCode;
   return res.json(response);
 };
@@ -65,6 +72,7 @@ const sendSMS = (body: string, to: string) => {
 };
 
 export {
+  // * as
   errRes,
   okRes,
   getOTP,

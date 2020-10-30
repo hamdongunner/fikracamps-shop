@@ -1,3 +1,4 @@
+import { Like } from "typeorm";
 import { errRes, okRes, paginate } from "../../helpers/tools";
 import { Category } from "../../src/entity/Category";
 import { Invoice } from "../../src/entity/Invoice";
@@ -14,12 +15,18 @@ export default class HomeController {
    * @param res
    */
   static async getCategories(req, res): Promise<object> {
-    let { p, s } = req.query;
+    let { p, s, q } = req.query;
     let { skip, take } = paginate(p, s);
+
+    let whereObj: object;
+
+    if (q) {
+      whereObj = { active: true, title: Like(`%${q}%`) };
+    } else whereObj = { active: true };
 
     try {
       let data = await Category.findAndCount({
-        where: { active: true },
+        where: whereObj,
         relations: ["products"],
         take,
         skip,
@@ -37,14 +44,29 @@ export default class HomeController {
    * @param res
    */
   static async getProducts(req, res): Promise<object> {
-    let { p, s } = req.query;
+    let { p, s, q } = req.query;
     let { skip, take } = paginate(p, s);
-
     let category = req.params.category;
     const active = true;
+
+    let whereObj: any;
+    if (q)
+      whereObj = [
+        {
+          active,
+          category,
+          title: Like(`%${q}%`),
+        },
+        {
+          active,
+          category,
+          description: Like(`%${q}%`),
+        },
+      ];
+    else whereObj = { active, category };
     try {
       let data = await Product.find({
-        where: { active, category },
+        where: whereObj,
         relations: ["category"],
         take,
         skip,
@@ -80,7 +102,6 @@ export default class HomeController {
     try {
       let data = await Invoice.find({
         where: { user: req.user },
-
         join: {
           alias: "invoice",
           leftJoinAndSelect: {
