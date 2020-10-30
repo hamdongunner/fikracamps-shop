@@ -351,12 +351,13 @@ export default class UserController {
    */
   static async upload(req: Request, res: Response): Promise<object> {
     if (!req.files) return errRes(res, `Image is missing`);
+
     let image = req.files.image;
     let fileName = "image";
     let path = `./public/${fileName}.png`;
     image.mv(path, function (err) {
       if (err) return errRes(res, err);
-      imgbbUploader(config.imageBB, `./public/${fileName}.png`)
+      imgbbUploader(config.imageBB, path)
         .then((r) => {
           fs.unlink(path, (error) => errRes(res, error));
           return okRes(res, r);

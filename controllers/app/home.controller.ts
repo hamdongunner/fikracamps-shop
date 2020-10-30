@@ -58,12 +58,12 @@ export default class HomeController {
         {
           active,
           category,
-          title: Like(`%${q}%`),
+          title: Raw((alias) => `${alias} ILIKE '%${q}%'`),
         },
         {
           active,
           category,
-          description: Like(`%${q}%`),
+          description: Raw((alias) => `${alias} ILIKE '%${q}%'`),
         },
       ];
     else whereObj = { active, category };
