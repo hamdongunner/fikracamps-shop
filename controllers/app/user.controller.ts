@@ -32,9 +32,12 @@ export default class UserController {
   static async register(req: Request, res: Response): Promise<object> {
     let notValid = validate(req.body, validation.register());
     if (notValid) return errRes(res, notValid);
+    let lang: any;
+    lang = req.query.lang || "en";
+    lang = lang || "en";
     let phoneObj = PhoneFormat.getAllFormats(req.body.phone);
     if (!phoneObj.isNumber)
-      return errRes(res, `Phone ${req.body.phone} is not a valid`, "phone");
+      return errRes(res, `phoneInvalid`, "phone", 400, lang, req.body.phone);
     let phone = phoneObj.globalP;
     let user: any;
     try {

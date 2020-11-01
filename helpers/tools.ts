@@ -10,9 +10,17 @@ const client = twilio(accountSid, authToken);
  * @param err
  * @param statusCode
  */
-const errRes = (res, err, key = "err", statusCode = 400) => {
+const errRes = (
+  res,
+  err,
+  key = "err",
+  statusCode = 400,
+  lang = "ar",
+  errValue = ""
+) => {
   let response = { status: false, err: null };
   if (typeof err === "string") {
+    err = tranlation(err, lang, errValue) || err;
     let obj = {};
     obj[key] = [err];
     response.err = obj;
@@ -22,6 +30,23 @@ const errRes = (res, err, key = "err", statusCode = 400) => {
 
   res.statusCode = statusCode;
   return res.json(response);
+};
+
+const tranlation = (err, lang, value = "") => {
+  let defaultMsg = {
+    en: "Something went wrong",
+    ar: "لقد حدث خطأ ما",
+  };
+  return (
+    {
+      en: {
+        phoneInvalid: `Phone ${value} is invalid`,
+      },
+      ar: {
+        phoneInvalid: `الرقم ${value} غير صالح`,
+      },
+    }[lang][err] || defaultMsg[lang]
+  );
 };
 
 /**
